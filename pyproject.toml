@@ -49,7 +49,7 @@ warn_unused_ignores = true
 lint.sequence = [
     { cmd = "black --check -v aiocoinbase tests" },
     { cmd = "flake8 aiocoinbase tests" },
-    { cmd = "mypy --pretty aiocoinbase tests" },
+    { cmd = "mypy --pretty aiocoinbase" },
 ]
 test = { cmd = "pytest -vv --cov=aiocoinbase --cov-report term --cov-report xml" }
 
