@@ -1,0 +1,45 @@
+[tool.poetry]
+authors = ["dikuchan <dikuchan@protonmail.com>"]
+description = "asyncio Coinbase Pro connector"
+license = "MIT"
+name = "aiocoinbase"
+readme = "README.md"
+repository = "https://github.com/dikuchan/aiocoinbase"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+aiohttp = "^3.8.1"
+aiodns = "^3.0.0"
+cattrs = "^1.10.0"
+cchardet = "^2.1.7"
+ciso8601 = "^2.2.0"
+orjson = "^3.6.6"
+pyhumps = "^3.5.0"
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+pytest-asyncio = "^0.18.1"
+mypy = { git = "https://github.com/python/mypy.git", rev = "master" }
+usort = "^1.0.1"
+
+[tool.poetry.extras]
+
+[tool.black]
+line-length = 89
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+disallow_any_explicit = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+implicit_reexport = true
+warn_no_return = true
+warn_unreachable = true
+warn_unused_ignores = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
