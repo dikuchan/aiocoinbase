@@ -22,6 +22,12 @@ jobs:
         run: poetry run poe lint
       - name: Test project
         run: poetry run poe test
+        env:
+          COINBASE_SANDBOX_KEY: ${{ secrets.COINBASE_SANDBOX_KEY }}
+          COINBASE_SANDBOX_SECRET: ${{ secrets.COINBASE_SANDBOX_SECRET }}
+          COINBASE_SANDBOX_PASSPHRASE: ${{ secrets.COINBASE_SANDBOX_PASSPHRASE }}
+          COINBASE_SANDBOX_ENDPOINT: ${{ secrets.COINBASE_SANDBOX_ENDPOINT }}
+          COINBASE_SANDBOX_ID: ${{ secrets.COINBASE_SANDBOX_ID }}
       - name: Update coverage report
         uses: codecov/codecov-action@v1
         with:
