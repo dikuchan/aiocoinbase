@@ -4,8 +4,7 @@ from typing import Sequence
 
 import attrs
 
-from .endpoint import Endpoint
-from ..utils import Method
+from ..endpoint import Endpoint
 from ..types import (
     CancelAfter,
     OrderType,
@@ -16,6 +15,7 @@ from ..types import (
     StopOrderType,
     TimeInForce,
 )
+from ..utils import Method
 
 """
 Types.
@@ -61,10 +61,27 @@ class Orders(Endpoint):
         self,
         order_id: str,
     ) -> Order:
+        """
+        Get a single order by ``order_id``.
+
+        If the order is canceled the response may have status code 404 if the order had
+        no matches.
+
+        Note: Open orders may change state between the request and the response
+            depending on market conditions.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getorder.
+
+        Permissions: ``view``, ``trade``.
+
+        :param order_id: either the exchange assigned id or the client assigned
+            ``client_oid``.
+            When using ``client_oid`` it must be preceded by the ``client: namespace``.
+        """
         return await self.request(
-            endpoint=f"/orders/{order_id}",
-            method=Method.GET,
-            cls=Order,
+            f"/orders/{order_id}",
+            Method.GET,
+            Order,
         )
 
     async def get_all(
@@ -78,22 +95,72 @@ class Orders(Endpoint):
         sorting: Sorting | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        before: datetime | None = None,
+        after: datetime | None = None,
     ) -> list[Order]:
+        """
+        List your current open orders.
+
+        Only open or un-settled orders are returned by default.
+        As soon as an order is no longer open and settled, it will no longer appear in
+        the default request.
+        Open orders may change state between the request and the response depending on
+        market conditions.
+
+        Note: Note that orders with a `pending` status have a reduced set of fields in
+            the response.
+            `Pending` limit orders will not have ``stp``, ``time_in_force``,
+            ``expire_time``, and ``post_only``.
+            `Pending` market orders will have the same fields as a `pending` limit order
+            minus ``price`` and ``size``, and no market specific fields (``funds``,
+            ``specified_funds``).
+            `Pending` stop orders will have the same fields as a `pending` limit order
+            and no stop specific fields (``stop``, ``stop_price``).
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getorders.
+
+        Permissions: ``view``, ``trade``.
+
+        Order status: Orders which are no longer resting on the order book, will be
+            marked with the done status.
+            There is a small window between an order being done and settled.
+            An order is settled when all the fills have settled and the remaining holds
+            (if any) have been removed.
+
+        Polling: For high-volume trading it is strongly recommended that you maintain
+            your own list of open orders and use one of the streaming market data feeds
+            to keep it updated.
+            You should poll the open orders' endpoint once when you start trading to
+            obtain the current state of any open orders.
+
+        :param limit: Limit on number of results to return.
+        :param status: List with order statuses to filter by.
+        :param profile_id: Filter results by a specific Coinbase ``profile_id``.
+        :param product_id: Filter results by a specific Coinbase ``product_id``.
+        :param sorted_by: Sort criteria for results.
+        :param sorting: Ascending or descending order.
+        :param start_date: Filter results by minimum posted date.
+        :param end_date: Filter results by maximum posted date.
+        :param before: Used for pagination. Sets start cursor to ``before`` date.
+        :param after: Used for pagination. Sets end cursor to ``after`` date.
+        """
         body = self.buildup(
             limit=limit,
             status=status,
             product_id=product_id,
             profile_id=profile_id,
-            sortedBy=str(sorted_by),
-            sorting=str(sorting),
-            start_date=start_date.isoformat() if start_date is not None else None,
-            end_date=end_date.isoformat() if end_date is not None else None,
+            sortedBy=(sorted_by, str),
+            sorting=(sorting, str),
+            start_date=(start_date, str),
+            end_date=(end_date, str),
+            before=(before, str),
+            after=(after, str),
         )
 
         return await self.request(
-            endpoint="/orders",
-            method=Method.GET,
-            cls=list[Order],
+            "/orders",
+            Method.GET,
+            list[Order],
             body=body,
         )
 
@@ -103,14 +170,32 @@ class Orders(Endpoint):
         *,
         profile_id: str | None = None,
     ) -> str:
-        body = self.buildup(
-            profile_id=profile_id,
-        )
+        """
+        Cancel a single open order by ``id``.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_deleteorder.
+
+        Permissions: ``trade``.
+
+        Response: Successfully cancelled order response will include the order ID if
+            requested cancellation is by exchange assigned ``id``, or the client
+            assigned ``client_oid`` if cancelled by client order ID.
+
+        Cancel reject: If the order could not be canceled (already filled or previously
+            canceled, etc.), then an error response will indicate the reason in the
+            message field.
+
+        :param order_id: ``id`` of the order to cancel.
+        :param profile_id: Cancels orders on a specific Coinbase profile.
+
+        :return: ``id`` of the order that was cancelled.
+        """
+        body = self.buildup(profile_id=profile_id)
 
         return await self.request(
-            endpoint=f"/orders/{order_id}",
-            method=Method.DELETE,
-            cls=str,
+            f"/orders/{order_id}",
+            Method.DELETE,
+            str,
             body=body,
         )
 
@@ -120,15 +205,29 @@ class Orders(Endpoint):
         profile_id: str | None = None,
         product_id: str | None = None,
     ) -> list[str]:
+        """
+        With the best effort, cancel all open orders.
+        This may require you to make the request multiple times until all the open
+        orders are deleted.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_deleteorders.
+
+        Permissions: ``trade``.
+
+        :param profile_id: Cancels orders on a specific profile.
+        :param product_id: Cancels orders on a specific product only.
+
+        :return: A list of the ``id``s of open orders that were successfully cancelled.
+        """
         body = self.buildup(
             profile_id=profile_id,
             product_id=product_id,
         )
 
         return await self.request(
-            endpoint="/orders",
-            method=Method.DELETE,
-            cls=list[str],
+            "/orders",
+            Method.DELETE,
+            list[str],
             body=body,
         )
 
@@ -150,26 +249,59 @@ class Orders(Endpoint):
         post_only: bool = False,
         client_oid: str | None = None,
     ) -> Order:
+        """
+        Create an order.
+
+        You can place two types of orders: limit and market.
+        Orders can only be placed if your account has sufficient funds.
+        Once an order is placed, your account funds will be put on hold for the duration
+        of the order.
+        How much and which funds are put on hold depends on the order type and
+        parameters specified.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_postorders.
+
+        Permissions: ``trade``.
+
+        :param side: Trade side (buy or sell).
+        :param product_id: Book on which to place an order.
+        :param profile_id: Create order on a specific ``profile_id``.
+            If None, default to `default` profile.
+        :param order_type: Limit, market or stop order type.
+        :param stp: Self-trade prevention type.
+        :param stop: Stop order type (loss or entry).
+        :param stop_price: Price threshold at which a stop order will be placed on the
+            book.
+        :param price: Price per unit of cryptocurrency, required for limit and stop
+            orders.
+        :param size: Amount of base currency to buy or sell, required for limit and stop
+            orders and market sells.
+        :param funds: Amount of quote currency to buy, required for market buys.
+        :param time_in_force: Lifetime of an order policy.
+        :param cancel_after: Min, hour or day.
+        :param post_only: If true, order will only execute as a maker order.
+        :param client_oid: Optional Order ID selected to identify the order.
+        """
         body = self.buildup(
             profile_id=profile_id,
-            type=str(order_type),
-            side=str(side),
+            type=(order_type, str),
+            side=(side, str),
             product_id=product_id,
-            stp=str(stp),
-            stop=str(stop),
-            stop_price=str(stop_price),
-            price=str(price),
-            size=str(size),
-            funds=str(funds),
-            time_in_force=str(time_in_force),
-            cancel_after=str(cancel_after),
+            stp=(stp, str),
+            stop=(stop, str),
+            stop_price=(stop_price, str),
+            price=(price, str),
+            size=(size, str),
+            funds=(funds, str),
+            time_in_force=(time_in_force, str),
+            cancel_after=(cancel_after, str),
             post_only=post_only,
             client_oid=client_oid,
         )
 
         return await self.request(
-            endpoint="/orders",
-            method=Method.POST,
-            cls=Order,
+            "/orders",
+            Method.POST,
+            Order,
             body=body,
         )

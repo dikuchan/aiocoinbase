@@ -4,7 +4,7 @@ from typing import Sequence
 
 import attrs
 
-from .endpoint import Endpoint
+from ..endpoint import Endpoint
 from ..utils import Method
 
 """
@@ -35,15 +35,32 @@ class Transfers(Endpoint):
         self,
         transfer_id: str,
     ) -> Transfer:
+        """
+        Get information on a single transfer.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_gettransfer.
+
+        Permissions: ``view``, ``trade``.
+
+        :param transfer_id: ID of a transfer.
+        """
         return await self.request(
-            endpoint=f"/transfers/{transfer_id}",
-            method=Method.GET,
-            cls=Transfer,
+            f"/transfers/{transfer_id}",
+            Method.GET,
+            Transfer,
         )
 
     async def get_all(self) -> list[Transfer]:
+        """
+        Get a list of in-progress and completed transfers of funds in and out of the
+        user's accounts.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_gettransfers.
+
+        Permissions: ``view``, ``trade``.
+        """
         return await self.request(
-            endpoint="/transfers",
-            method=Method.GET,
-            cls=list[Transfer],
+            "/transfers",
+            Method.GET,
+            list[Transfer],
         )

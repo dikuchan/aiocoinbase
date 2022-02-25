@@ -5,6 +5,7 @@ from abc import ABC
 from typing import (
     Sequence,
     Type,
+    TypeAlias,
     TypeVar,
 )
 
@@ -12,18 +13,20 @@ import aiohttp
 import humps  # noqa
 import orjson
 
-from ..converter import Converter
-from ..exceptions import (
+from .converter import Converter
+from .exceptions import (
     CoinbaseError,
     InvalidKeyError,
     InvalidRequestError,
     NoAccessError,
     NotFoundError,
 )
-from ..utils import (
+from .utils import (
     Method,
     now,
 )
+
+PrimitiveType: TypeAlias = bool | int | str | Sequence | None
 
 
 class Endpoint(ABC):
@@ -34,6 +37,12 @@ class Endpoint(ABC):
         secret: str,
         session: aiohttp.ClientSession,
     ) -> None:
+        """
+        Base endpoint with all the necessary defined method.
+
+        :param secret: Coinbase Pro API secret.
+        :param session: aiohttp client session.
+        """
         self.secret = secret
         self.session = session
         self.converter = Converter()
@@ -68,10 +77,25 @@ class Endpoint(ABC):
 
     @staticmethod
     def buildup(
-        **params: bool | int | str | Sequence | None,
+        **params: PrimitiveType | tuple[PrimitiveType, Type],
     ) -> str:
-        params = {k: v for k, v in params.items() if v is not None}
-        params = humps.decamelize(params)
+        """
+        Build-up a request body from the provided parameters.
+
+        :param params: Request parameters.
+
+        :return: JSON-encoded request body.
+        """
+        body = {}
+        for key, value in params.items():
+            match value:
+                case None | (None, _):
+                    continue
+                case (param, func):
+                    body[key] = func(param)
+                case param:
+                    body[key] = param
+        params = humps.decamelize(body)
         body = orjson.dumps(params).decode()
 
         return body
@@ -81,6 +105,12 @@ class Endpoint(ABC):
         status: int,
         raw: str,
     ) -> None:
+        """
+        Raise an exception if the provided response is invalid.
+
+        :param status: HTTP response status code.
+        :param raw: Raw response message.
+        """
         if status == 200:
             return
         message = orjson.loads(raw)["message"]
@@ -104,6 +134,16 @@ class Endpoint(ABC):
         *,
         body: str | None = None,
     ) -> T:
+        """
+        Send an HTTP request to Coinbase.
+
+        :param endpoint: Coinbase REST method endpoint.
+        :param method: REST API method.
+        :param cls: Python class to wrap a response object into.
+        :param body: JSON-encoded body of a request.
+
+        :return: Response object.
+        """
         timestamp = now()
         signature = self.sign(
             endpoint=endpoint,

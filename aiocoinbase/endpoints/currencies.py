@@ -3,7 +3,7 @@ from typing import Sequence
 
 import attrs
 
-from .endpoint import Endpoint
+from ..endpoint import Endpoint
 from ..utils import Method
 
 """
@@ -48,15 +48,32 @@ class Currencies(Endpoint):
         self,
         currency_id: str,
     ) -> Currency:
+        """
+        Get a single currency by its ID.
+
+        Currency codes will conform to the ISO 4217 standard where possible.
+        Currencies which have or had no representation in ISO 4217 may use a custom code.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getcurrency.
+
+        :param currency_id: Currency ID.
+        """
         return await self.request(
-            endpoint=f"/currencies/{currency_id}",
-            method=Method.GET,
-            cls=Currency,
+            f"/currencies/{currency_id}",
+            Method.GET,
+            Currency,
         )
 
     async def get_all(self) -> list[Currency]:
+        """
+        Get a list of all known currencies.
+
+        Note: Not all currencies may be currently in use for trading.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getcurrencies.
+        """
         return await self.request(
-            endpoint="/currencies",
-            method=Method.GET,
-            cls=list[Currency],
+            "/currencies",
+            Method.GET,
+            list[Currency],
         )
