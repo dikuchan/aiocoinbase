@@ -78,7 +78,7 @@ class Orders(Endpoint):
             ``client_oid``.
             When using ``client_oid`` it must be preceded by the ``client: namespace``.
         """
-        return await self.request(
+        return await self._request(
             f"/orders/{order_id}",
             Method.GET,
             Order,
@@ -144,7 +144,7 @@ class Orders(Endpoint):
         :param before: Used for pagination. Sets start cursor to ``before`` date.
         :param after: Used for pagination. Sets end cursor to ``after`` date.
         """
-        body = self.buildup(
+        body = self._buildup(
             limit=limit,
             status=status,
             product_id=product_id,
@@ -157,7 +157,7 @@ class Orders(Endpoint):
             after=(after, str),
         )
 
-        return await self.request(
+        return await self._request(
             "/orders",
             Method.GET,
             list[Order],
@@ -190,9 +190,9 @@ class Orders(Endpoint):
 
         :return: ``id`` of the order that was cancelled.
         """
-        body = self.buildup(profile_id=profile_id)
+        body = self._buildup(profile_id=profile_id)
 
-        return await self.request(
+        return await self._request(
             f"/orders/{order_id}",
             Method.DELETE,
             str,
@@ -219,12 +219,12 @@ class Orders(Endpoint):
 
         :return: A list of the ``id``s of open orders that were successfully cancelled.
         """
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             product_id=product_id,
         )
 
-        return await self.request(
+        return await self._request(
             "/orders",
             Method.DELETE,
             list[str],
@@ -282,7 +282,7 @@ class Orders(Endpoint):
         :param post_only: If true, order will only execute as a maker order.
         :param client_oid: Optional Order ID selected to identify the order.
         """
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             type=(order_type, str),
             side=(side, str),
@@ -299,7 +299,7 @@ class Orders(Endpoint):
             client_oid=client_oid,
         )
 
-        return await self.request(
+        return await self._request(
             "/orders",
             Method.POST,
             Order,

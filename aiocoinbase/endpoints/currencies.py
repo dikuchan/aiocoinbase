@@ -58,7 +58,7 @@ class Currencies(Endpoint):
 
         :param currency_id: Currency ID.
         """
-        return await self.request(
+        return await self._request(
             f"/currencies/{currency_id}",
             Method.GET,
             Currency,
@@ -72,7 +72,7 @@ class Currencies(Endpoint):
 
         Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getcurrencies.
         """
-        return await self.request(
+        return await self._request(
             "/currencies",
             Method.GET,
             list[Currency],

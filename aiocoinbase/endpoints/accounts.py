@@ -77,7 +77,7 @@ class Accounts(Endpoint):
 
         :param account_id: Coinbase account ID.
         """
-        return await self.request(
+        return await self._request(
             f"/accounts/{account_id}",
             Method.GET,
             Account,
@@ -93,7 +93,7 @@ class Accounts(Endpoint):
 
         Limits: 25 requests per second, up to 50 requests per second in bursts.
         """
-        return await self.request(
+        return await self._request(
             "/accounts",
             Method.GET,
             list[Account],
@@ -123,13 +123,13 @@ class Accounts(Endpoint):
         :param after: Used for pagination. Sets end cursor to ``after`` date.
         :param limit: Limit on number of results to return.
         """
-        body = self.buildup(
+        body = self._buildup(
             before=(before, str),
             after=(after, str),
             limit=limit,
         )
 
-        return await self.request(
+        return await self._request(
             f"/accounts/{account_id}/holds",
             Method.GET,
             list[Hold],
@@ -168,7 +168,7 @@ class Accounts(Endpoint):
         :param limit: Limit on number of results to return.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             start_date=(start_date, str),
             end_date=(end_date, str),
             before=(before, str),
@@ -177,7 +177,7 @@ class Accounts(Endpoint):
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             f"/accounts/{account_id}/ledger",
             Method.GET,
             Ledger,
@@ -204,14 +204,14 @@ class Accounts(Endpoint):
         :param limit: Limit on number of results to return.
         :param type: Type of transfers to filter by.
         """
-        body = self.buildup(
+        body = self._buildup(
             before=(before, str),
             after=(after, str),
             limit=limit,
             type=type,
         )
 
-        return await self.request(
+        return await self._request(
             f"/accounts/{account_id}/transfers",
             Method.GET,
             list[Transfer],

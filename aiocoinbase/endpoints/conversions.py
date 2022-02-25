@@ -54,7 +54,7 @@ class Conversions(Endpoint):
         :param profile_id: Coinbase profile ID.
         :param nonce: Nonce.
         """
-        body = self.buildup(
+        body = self._buildup(
             to=to_currency,
             amount=(amount, str),
             profile_id=profile_id,
@@ -62,7 +62,7 @@ class Conversions(Endpoint):
             **{"from": from_currency},
         )
 
-        return await self.request(
+        return await self._request(
             "/conversions",
             Method.POST,
             Conversion,
@@ -83,12 +83,12 @@ class Conversions(Endpoint):
         :param conversion_id: Coinbase conversion ID.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             conversion_id=conversion_id,
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             f"/conversions/{conversion_id}",
             Method.GET,
             Conversion,

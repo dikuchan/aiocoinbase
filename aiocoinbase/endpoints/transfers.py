@@ -44,7 +44,7 @@ class Transfers(Endpoint):
 
         :param transfer_id: ID of a transfer.
         """
-        return await self.request(
+        return await self._request(
             f"/transfers/{transfer_id}",
             Method.GET,
             Transfer,
@@ -59,7 +59,7 @@ class Transfers(Endpoint):
 
         Permissions: ``view``, ``trade``.
         """
-        return await self.request(
+        return await self._request(
             "/transfers",
             Method.GET,
             list[Transfer],

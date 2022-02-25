@@ -51,14 +51,14 @@ class Deposits(Endpoint):
         :param currency: Coinbase product name to deposit.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             amount=(amount, str),
             coinbase_account_id=account_id,
             currency=currency,
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             "/deposits/coinbase-account",
             Method.POST,
             Deposit,
@@ -86,14 +86,14 @@ class Deposits(Endpoint):
         :param currency: Coinbase product name to deposit.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             amount=(amount, str),
             payment_method_id=method_id,
             currency=currency,
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             "/deposits/payment-method",
             Method.POST,
             Deposit,

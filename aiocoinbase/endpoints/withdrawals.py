@@ -48,14 +48,14 @@ class Withdrawals(Endpoint):
         :param currency: Currency to transfer.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             amount=(amount, str),
             coinbase_account_id=account_id,
             currency=currency,
         )
 
-        return await self.request(
+        return await self._request(
             "/withdrawals/coinbase-account",
             Method.POST,
             Withdrawal,
@@ -90,7 +90,7 @@ class Withdrawals(Endpoint):
         :param fee: Fee.
         :param destination_tag: Destination tag.
         """
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             amount=(amount, str),
             currency=currency,
@@ -102,7 +102,7 @@ class Withdrawals(Endpoint):
             fee=(fee, str),
         )
 
-        return await self.request(
+        return await self._request(
             "/withdrawals/crypto",
             Method.GET,
             Withdrawal,
@@ -130,14 +130,14 @@ class Withdrawals(Endpoint):
         :param currency: Currency to transfer.
         :param profile_id: Coinbase profile ID.
         """
-        body = self.buildup(
+        body = self._buildup(
             amount=(amount, str),
             payment_method_id=method_id,
             currency=currency,
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             "/withdrawals/payment-method",
             Method.POST,
             Withdrawal,
@@ -160,12 +160,12 @@ class Withdrawals(Endpoint):
         :param currency: Currency to transfer.
         :param address: Crypto address to transfer to.
         """
-        body = self.buildup(
+        body = self._buildup(
             currency=currency,
             crypto_address=address,
         )
 
-        return await self.request(
+        return await self._request(
             "/withdrawals/fee-estimate",
             Method.GET,
             Decimal,

@@ -95,7 +95,7 @@ class Reports(Endpoint):
 
         :param report_id: ID of a report.
         """
-        return await self.request(
+        return await self._request(
             f"/reports/{report_id}",
             Method.GET,
             Report,
@@ -128,7 +128,7 @@ class Reports(Endpoint):
         :param report_type: Filter results by type of report (fills or account).
         :param ignore_expired: Whether to ignore expired results.
         """
-        body = self.buildup(
+        body = self._buildup(
             portfolio_id=portfolio_id,
             after=(after, str),
             limit=limit,
@@ -136,7 +136,7 @@ class Reports(Endpoint):
             ignore_expired=ignore_expired,
         )
 
-        return await self.request(
+        return await self._request(
             "/reports",
             Method.GET,
             list[Report],
@@ -180,7 +180,7 @@ class Reports(Endpoint):
         :param email: Email to send generated report to.
         :param profile_id: Which portfolio to generate the report for.
         """
-        body = self.buildup(
+        body = self._buildup(
             start_date=(start_date, str),
             end_date=(end_date, str),
             type=(report_type, str),
@@ -192,7 +192,7 @@ class Reports(Endpoint):
             profile_id=profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             "/reports",
             Method.POST,
             CreateResponse,

@@ -34,7 +34,7 @@ class Oracle(Endpoint):
 
         Permissions: ``view``.
         """
-        return await self.request(
+        return await self._request(
             "/oracle",
             Method.GET,
             Price,

@@ -35,7 +35,7 @@ class Fees(Endpoint):
 
         Permissions: ``view``.
         """
-        return await self.request(
+        return await self._request(
             "/fees",
             Method.GET,
             list[Fee],

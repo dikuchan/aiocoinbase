@@ -43,11 +43,11 @@ class Endpoint(ABC):
         :param secret: Coinbase Pro API secret.
         :param session: aiohttp client session.
         """
-        self.secret = secret
-        self.session = session
-        self.converter = Converter()
+        self._secret = secret
+        self._session = session
+        self._converter = Converter()
 
-    def sign(
+    def _sign(
         self,
         endpoint: str,
         method: str,
@@ -65,7 +65,7 @@ class Endpoint(ABC):
         :return: Signed payload.
         """
         message = "".join((timestamp, method, endpoint, body)).encode()
-        key = base64.b64decode(self.secret)
+        key = base64.b64decode(self._secret)
         hashed = hmac.new(
             key=key,
             msg=message,
@@ -76,7 +76,7 @@ class Endpoint(ABC):
         return signature
 
     @staticmethod
-    def buildup(
+    def _buildup(
         **params: Primitive | tuple[Primitive, Type],
     ) -> str:
         """
@@ -101,7 +101,7 @@ class Endpoint(ABC):
         return body
 
     @staticmethod
-    async def try_raise(
+    async def _try_raise(
         status: int,
         raw: str,
     ) -> None:
@@ -126,7 +126,7 @@ class Endpoint(ABC):
             case 500:
                 raise CoinbaseError(message)
 
-    async def request(
+    async def _request(
         self,
         endpoint: str,
         method: Method,
@@ -145,7 +145,7 @@ class Endpoint(ABC):
         :return: Response object.
         """
         timestamp = now()
-        signature = self.sign(
+        signature = self._sign(
             endpoint=endpoint,
             method=str(method),
             body=body if body else "",
@@ -162,24 +162,24 @@ class Endpoint(ABC):
         }
         match method:
             case Method.DELETE:
-                async with self.session.delete(**params) as response:  # type: ignore
+                async with self._session.delete(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.GET:
-                async with self.session.get(**params) as response:  # type: ignore
+                async with self._session.get(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.POST:
-                async with self.session.post(**params) as response:  # type: ignore
+                async with self._session.post(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.PUT:
-                async with self.session.put(**params) as response:  # type: ignore
+                async with self._session.put(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
 
         payload = orjson.loads(raw)
         payload = humps.decamelize(payload)
-        data = self.converter.structure(payload, cls)
+        data = self._converter.structure(payload, cls)
 
         return data

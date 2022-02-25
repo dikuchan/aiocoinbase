@@ -115,7 +115,7 @@ class Products(Endpoint):
 
         :param product_id: Coinbase product ID.
         """
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}",
             Method.GET,
             Product,
@@ -127,7 +127,7 @@ class Products(Endpoint):
 
         Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getproducts.
         """
-        return await self.request(
+        return await self._request(
             "/products",
             Method.GET,
             list[Product],
@@ -155,9 +155,9 @@ class Products(Endpoint):
         if level not in (1, 2, 3):
             raise ValueError("Invalid `level` value")
 
-        body = self.buildup(level=level)
+        body = self._buildup(level=level)
 
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}/book",
             Method.GET,
             Book,
@@ -189,13 +189,13 @@ class Products(Endpoint):
         :param start: Time for starting range of aggregations.
         :param end: Time for ending range of aggregations.
         """
-        body = self.buildup(
+        body = self._buildup(
             period=(period, int),
             start=(start, str),
             end=(end, str),
         )
 
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}/candles",
             Method.GET,
             list[OHLC],
@@ -213,7 +213,7 @@ class Products(Endpoint):
 
         :param product_id: Coinbase product ID.
         """
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}/stats",
             Method.GET,
             Window,
@@ -231,7 +231,7 @@ class Products(Endpoint):
 
         :param product_id: Coinbase product ID.
         """
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}/ticker",
             Method.GET,
             Ticker,
@@ -255,13 +255,13 @@ class Products(Endpoint):
         :param before: Used for pagination. Sets start cursor to ``before`` date.
         :param after: Used for pagination. Sets end cursor to ``after`` date.
         """
-        body = self.buildup(
+        body = self._buildup(
             limit=limit,
             before=(before, str),
             after=(after, str),
         )
 
-        return await self.request(
+        return await self._request(
             f"/products/{product_id}/trades",
             Method.GET,
             list[Trade],

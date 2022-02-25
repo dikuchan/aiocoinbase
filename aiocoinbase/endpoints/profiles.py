@@ -44,9 +44,9 @@ class Profiles(Endpoint):
         :param profile_id: Coinbase profile ID.
         :param active: Whether is active.
         """
-        body = self.buildup(active=active)
+        body = self._buildup(active=active)
 
-        return await self.request(
+        return await self._request(
             f"/profiles/{profile_id}",
             Method.GET,
             Profile,
@@ -67,9 +67,9 @@ class Profiles(Endpoint):
 
         :param active: Whether is active.
         """
-        body = self.buildup(active=active)
+        body = self._buildup(active=active)
 
-        return await self.request(
+        return await self._request(
             "/profiles",
             Method.GET,
             list[Profile],
@@ -88,9 +88,9 @@ class Profiles(Endpoint):
 
         :param name: Profile name.
         """
-        body = self.buildup(name=name)
+        body = self._buildup(name=name)
 
-        return await self.request(
+        return await self._request(
             "/profiles",
             Method.POST,
             Profile,
@@ -116,14 +116,14 @@ class Profiles(Endpoint):
         :param currency: Currency name.
         :param amount: Amount of currency to transfer.
         """
-        body = self.buildup(
+        body = self._buildup(
             to=to_profile_id,
             currency=currency,
             amount=(amount, str),
             **{"from": from_profile_id},
         )
 
-        return await self.request(
+        return await self._request(
             "/profiles/transfer",
             Method.POST,
             None,  # type: ignore
@@ -147,12 +147,12 @@ class Profiles(Endpoint):
         if name in ("default", "margin"):
             raise ValueError("Invalid profile name")
 
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             name=name,
         )
 
-        return await self.request(
+        return await self._request(
             f"/profiles/{profile_id}",
             Method.PUT,
             Profile,
@@ -174,12 +174,12 @@ class Profiles(Endpoint):
         :param profile_id: Coinbase profile ID.
         :param to_profile_id: Coinbase profile ID to transfer funds to.
         """
-        body = self.buildup(
+        body = self._buildup(
             profile_id=profile_id,
             to=to_profile_id,
         )
 
-        return await self.request(
+        return await self._request(
             f"/profiles/{profile_id}/deactivate",
             Method.PUT,
             None,  # type: ignore
