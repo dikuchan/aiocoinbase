@@ -3,7 +3,7 @@ from typing import Sequence
 
 import attrs
 
-from .endpoint import Endpoint
+from ..endpoint import Endpoint
 from ..utils import Method
 
 """
@@ -26,8 +26,16 @@ Connector.
 
 class Oracle(Endpoint):
     async def get(self) -> Price:
-        return await self.request(
-            endpoint="/oracle",
-            method=Method.GET,
-            cls=Price,
+        """
+        Get cryptographically signed prices ready to be posted on-chain using
+        Compound's Open Oracle smart contract.
+
+        Docs: https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getcoinbasepriceoracle.
+
+        Permissions: ``view``.
+        """
+        return await self._request(
+            "/oracle",
+            Method.GET,
+            Price,
         )

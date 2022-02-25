@@ -5,6 +5,7 @@ from abc import ABC
 from typing import (
     Sequence,
     Type,
+    TypeAlias,
     TypeVar,
 )
 
@@ -12,18 +13,20 @@ import aiohttp
 import humps  # noqa
 import orjson
 
-from ..converter import Converter
-from ..exceptions import (
+from .converter import Converter
+from .exceptions import (
     CoinbaseError,
     InvalidKeyError,
     InvalidRequestError,
     NoAccessError,
     NotFoundError,
 )
-from ..utils import (
+from .utils import (
     Method,
     now,
 )
+
+Primitive: TypeAlias = bool | int | str | Sequence | None
 
 
 class Endpoint(ABC):
@@ -34,11 +37,17 @@ class Endpoint(ABC):
         secret: str,
         session: aiohttp.ClientSession,
     ) -> None:
-        self.secret = secret
-        self.session = session
-        self.converter = Converter()
+        """
+        Base endpoint with all the necessary defined method.
 
-    def sign(
+        :param secret: Coinbase Pro API secret.
+        :param session: aiohttp client session.
+        """
+        self._secret = secret
+        self._session = session
+        self._converter = Converter()
+
+    def _sign(
         self,
         endpoint: str,
         method: str,
@@ -56,7 +65,7 @@ class Endpoint(ABC):
         :return: Signed payload.
         """
         message = "".join((timestamp, method, endpoint, body)).encode()
-        key = base64.b64decode(self.secret)
+        key = base64.b64decode(self._secret)
         hashed = hmac.new(
             key=key,
             msg=message,
@@ -67,20 +76,41 @@ class Endpoint(ABC):
         return signature
 
     @staticmethod
-    def buildup(
-        **params: bool | int | str | Sequence | None,
+    def _buildup(
+        **params: Primitive | tuple[Primitive, Type],
     ) -> str:
-        params = {k: v for k, v in params.items() if v is not None}
-        params = humps.decamelize(params)
-        body = orjson.dumps(params).decode()
+        """
+        Build-up a request body from the provided parameters.
+
+        :param params: Request parameters.
+
+        :return: JSON-encoded request body.
+        """
+        processed = {}
+        for key, value in params.items():
+            match value:
+                case None | (None, _):
+                    continue
+                case (param, func):
+                    processed[key] = func(param)  # type: ignore
+                case param:
+                    processed[key] = param
+        processed = humps.decamelize(processed)
+        body = orjson.dumps(processed).decode()
 
         return body
 
     @staticmethod
-    async def try_raise(
+    async def _try_raise(
         status: int,
         raw: str,
     ) -> None:
+        """
+        Raise an exception if the provided response is invalid.
+
+        :param status: HTTP response status code.
+        :param raw: Raw response message.
+        """
         if status == 200:
             return
         message = orjson.loads(raw)["message"]
@@ -96,7 +126,7 @@ class Endpoint(ABC):
             case 500:
                 raise CoinbaseError(message)
 
-    async def request(
+    async def _request(
         self,
         endpoint: str,
         method: Method,
@@ -104,8 +134,18 @@ class Endpoint(ABC):
         *,
         body: str | None = None,
     ) -> T:
+        """
+        Send an HTTP request to Coinbase.
+
+        :param endpoint: Coinbase REST method endpoint.
+        :param method: REST API method.
+        :param cls: Python class to wrap a response object into.
+        :param body: JSON-encoded body of a request.
+
+        :return: Response object.
+        """
         timestamp = now()
-        signature = self.sign(
+        signature = self._sign(
             endpoint=endpoint,
             method=str(method),
             body=body if body else "",
@@ -122,24 +162,24 @@ class Endpoint(ABC):
         }
         match method:
             case Method.DELETE:
-                async with self.session.delete(**params) as response:  # type: ignore
+                async with self._session.delete(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.GET:
-                async with self.session.get(**params) as response:  # type: ignore
+                async with self._session.get(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.POST:
-                async with self.session.post(**params) as response:  # type: ignore
+                async with self._session.post(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
             case Method.PUT:
-                async with self.session.put(**params) as response:  # type: ignore
+                async with self._session.put(**params) as response:  # type: ignore
                     raw = await response.text()
-                    await self.try_raise(response.status, raw)
+                    await self._try_raise(response.status, raw)
 
         payload = orjson.loads(raw)
         payload = humps.decamelize(payload)
-        data = self.converter.structure(payload, cls)
+        data = self._converter.structure(payload, cls)
 
         return data
