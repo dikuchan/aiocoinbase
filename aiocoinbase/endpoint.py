@@ -26,7 +26,7 @@ from .utils import (
     now,
 )
 
-PrimitiveType: TypeAlias = bool | int | str | Sequence | None
+Primitive: TypeAlias = bool | int | str | Sequence | None
 
 
 class Endpoint(ABC):
@@ -77,7 +77,7 @@ class Endpoint(ABC):
 
     @staticmethod
     def buildup(
-        **params: PrimitiveType | tuple[PrimitiveType, Type],
+        **params: Primitive | tuple[Primitive, Type],
     ) -> str:
         """
         Build-up a request body from the provided parameters.
@@ -86,17 +86,17 @@ class Endpoint(ABC):
 
         :return: JSON-encoded request body.
         """
-        body = {}
+        processed = {}
         for key, value in params.items():
             match value:
                 case None | (None, _):
                     continue
                 case (param, func):
-                    body[key] = func(param)
+                    processed[key] = func(param)  # type: ignore
                 case param:
-                    body[key] = param
-        params = humps.decamelize(body)
-        body = orjson.dumps(params).decode()
+                    processed[key] = param
+        processed = humps.decamelize(processed)
+        body = orjson.dumps(processed).decode()
 
         return body
 
