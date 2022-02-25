@@ -4,5 +4,7 @@
 .pytest_cache/
 
 # Files.
+.coverage
 .env
+coverage.xml
 poetry.lock

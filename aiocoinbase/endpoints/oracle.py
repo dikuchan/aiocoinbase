@@ -27,7 +27,7 @@ Connector.
 class Oracle(Endpoint):
     async def get(self) -> Price:
         return await self.request(
-            endpoint=f"/oracle",
+            endpoint="/oracle",
             method=Method.GET,
             cls=Price,
         )
